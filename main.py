@@ -23,16 +23,15 @@ This file is part of Trendology.
 
 import sys
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QApplication, QWidget
-import lib.trendologyIO as tIO
+from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow
 import qt.trendologyGUI as tGUI
 
 # initiate window
-class trendologyMain(QWidget):
+class trendologyMain(QMainWindow):
     def __init__(self, parent=None):
         super(trendologyMain, self).__init__(parent)
 
-        self.ui = tGUI.Ui_Trendology()
+        self.ui = tGUI.trendologyGUI()
 
         self.ui.setupUi(self)
 '''
@@ -47,14 +46,8 @@ class trendologyMain(QWidget):
 
 # Main Application        
 if __name__ == '__main__':
-    print("Hello World")
-    
-    wells=tIO.loadWells("example_data\wells.csv")
     
     app = QApplication(sys.argv)
     trendapp = trendologyMain()
-    
-    trendapp.ui.setWells(wells)    
-    
     trendapp.show()
     sys.exit(app.exec_())  

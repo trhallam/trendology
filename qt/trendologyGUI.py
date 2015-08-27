@@ -25,78 +25,24 @@ This Library contains the necessary classes to handle loading and saving of
 data from the trendology package.
 """
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qt.mainGUI import *
+from lib import trendologyIO as tIO
 
-class Ui_Trendology(object):
 
+class trendologyGUI(Ui_Trendology):
+
+#Redfine setupUi with additional linkages etc.
+    def setupUi(self, parent=None):
+        super(trendologyGUI, self).setupUi(parent)
+        #menu connections
+        self.actionLoad_File.triggered.connect(self.openFile)
     
-    
-    def setupUi(self, Trendology):
-        Trendology.setObjectName("Trendology")
-        Trendology.resize(1024, 768)
-        Trendology.setMinimumSize(QtCore.QSize(1024, 768))
-        self.centralwidget = QtWidgets.QWidget(Trendology)
-        self.centralwidget.setObjectName("centralwidget")
-        self.listViewWells = QtWidgets.QListView(self.centralwidget)
-        self.listViewWells.setGeometry(QtCore.QRect(30, 30, 211, 711))
-        self.listViewWells.setMouseTracking(False)
-        self.listViewWells.setWindowTitle("Wells")
-        self.listViewWells.setObjectName("listViewWells")
-        #Trendology.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(Trendology)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        self.menuEdit = QtWidgets.QMenu(self.menubar)
-        self.menuEdit.setObjectName("menuEdit")
-        self.menuView = QtWidgets.QMenu(self.menubar)
-        self.menuView.setObjectName("menuView")
-        self.menuSettings = QtWidgets.QMenu(self.menubar)
-        self.menuSettings.setObjectName("menuSettings")
-        self.menuHelp = QtWidgets.QMenu(self.menubar)
-        self.menuHelp.setObjectName("menuHelp")
-        #Trendology.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(Trendology)
-        self.statusbar.setObjectName("statusbar")
-        #Trendology.setStatusBar(self.statusbar)
-        self.actionExit = QtWidgets.QAction(Trendology)
-        self.actionExit.setObjectName("actionExit")
-        self.actionLoad_File = QtWidgets.QAction(Trendology)
-        self.actionLoad_File.setObjectName("actionLoad_File")
-        self.actionSave_Project = QtWidgets.QAction(Trendology)
-        self.actionSave_Project.setObjectName("actionSave_Project")
-        self.menuFile.addSeparator()
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionLoad_File)
-        self.menuFile.addAction(self.actionSave_Project)
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionExit)
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
-        self.menubar.addAction(self.menuView.menuAction())
-        self.menubar.addAction(self.menuSettings.menuAction())
-        self.menubar.addAction(self.menuHelp.menuAction())
-
 # items from me
-        self.wellModel = QtGui.QStandardItemModel()    
-
-
-        self.retranslateUi(Trendology)
-        QtCore.QMetaObject.connectSlotsByName(Trendology)
-
-    def retranslateUi(self, Trendology):
-        _translate = QtCore.QCoreApplication.translate
-        Trendology.setWindowTitle(_translate("Trendology", "MainWindow"))
-        self.menuFile.setTitle(_translate("Trendology", "File"))
-        self.menuEdit.setTitle(_translate("Trendology", "Edit"))
-        self.menuView.setTitle(_translate("Trendology", "View"))
-        self.menuSettings.setTitle(_translate("Trendology", "Settings"))
-        self.menuHelp.setTitle(_translate("Trendology", "Help"))
-        self.actionExit.setText(_translate("Trendology", "Exit"))
-        self.actionLoad_File.setText(_translate("Trendology", "Load File"))
-        self.actionSave_Project.setText(_translate("Trendology", "Save Project"))
-        
+    def __init__(self):
+        self.wellModel = QtGui.QStandardItemModel()
+        self.formModel = QtGui.QStandardItemModel()
+        #self.dataModel = QtGui.QStandardItemModel()
+      
     def setWells(self, wells):
         '''
         set wells in the well list
@@ -104,8 +50,66 @@ class Ui_Trendology(object):
         for well in wells:
             item=QtGui.QStandardItem(well)
             item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
             self.wellModel.appendRow(item)
             
         self.listViewWells.setModel(self.wellModel)
-       
+    
+    def setFormations(self, formations):
+        '''
+        set formations in the formation list
+        '''
+        #remove duplicates
+        shortForms=list(set(formations))
+        #add to list
+        for form in shortForms:
+            item=QtGui.QStandardItem(form)
+            item.setCheckable(True)
+            item.setCheckState(QtCore.Qt.Checked)
+            self.formModel.appendRow(item)
+            
+        self.listViewFormations.setModel(self.formModel)
+      
+    def setData(self):
+        '''
+        set data into the data table tab
+        '''
+        self.tableWidget.setColumnCount(self.numCol)
+        self.tableWidget.setRowCount(self.numRow+2)
+        #self.tableWidget.setItem(2,2,QtWidgets.QTableWidgetItem("Help"))
+        
+        for row in range(self.numRow):
+            for col in range(self.numCol):
+                self.tableWidget.setItem(row,col,\
+                    QtWidgets.QTableWidgetItem(self.data[row][col]))
+        #self.tableWidget.setModel(self.dataModel)
+        
+        '''
+        headers = [
+            QtWidgets.QTableWidgetItem(field)
+            for field in self.dataHeaders
+        ]
+        self.dataModel.appendRow(headers)
+        '''
+    
+    def openFile(self):
+        # QT Open File Dialog from Menu
+        openDlg=QtWidgets.QWidget()
+        self.fileName=QtWidgets.QFileDialog.getOpenFileName(openDlg, 'Open File')
+        #read file
+        self.dataHeaders,self.dataUnits,self.data=tIO.loadCSV("example_data\wells.csv")
+        self.numRow=len(self.data)
+        self.numCol=len(self.data[0])
+        self.dataWells=[]
+        self.dataFormations=[]
+        for row in range(0,self.numRow):
+            self.dataWells.append(self.data[row][0])
+            self.dataFormations.append(self.data[row][1])
+
+        #for col in range(0,numCol):
+            
+        #display data
+        self.setWells(self.dataWells)
+        self.setFormations(self.dataFormations)
+        self.setData()
 

@@ -31,13 +31,15 @@ import csv
 Attempt 1: Loading csv data.
 """
 
-def loadWells(file):
+def loadCSV(file):
     '''
     Well names should be defined in the first column of the file.
     '''
     with open(file) as csvfile:
-        wellReader = csv.reader(csvfile, delimiter=',')
-        wells=[]
-        for row in wellReader:
-            wells.append(row[0])
-    return wells
+        fileReader = csv.reader(csvfile, delimiter=',')
+        headers=fileReader.__next__()
+        units=fileReader.__next__()
+        data=[]
+        for row in fileReader:
+            data.append(row)
+    return headers,units,data
